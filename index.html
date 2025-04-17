@@ -141,6 +141,87 @@
             width: 100%;
         }
         
+        nav a#download-pdf {
+            background-color: var(--accent-color);
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav a#download-pdf:hover {
+            background-color: #c0392b;
+        }
+        
+        nav a#download-pdf::after {
+            display: none;
+        }
+        
+        /* Estilos para impressão e PDF */
+        @media print {
+            body {
+                font-size: 12pt;
+                line-height: 1.3;
+                background: white;
+                color: black;
+            }
+            
+            nav, .contact-form, footer {
+                display: none !important;
+            }
+            
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            
+            header {
+                padding: 15px 0;
+                page-break-after: avoid;
+            }
+            
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+            }
+            
+            p, li {
+                page-break-inside: avoid;
+            }
+            
+            section {
+                page-break-inside: auto;
+                margin-bottom: 10mm;
+            }
+            
+            .section-title::after {
+                background-color: #000;
+            }
+            
+            a {
+                text-decoration: none;
+                color: #000;
+            }
+            
+            .timeline::after {
+                background-color: #333;
+            }
+            
+            .btn, .timeline-item::after {
+                display: none;
+            }
+            
+            .profile-image {
+                border-color: #333;
+            }
+            
+            .skill-tag {
+                border: 1px solid #ddd;
+                background-color: #f9f9f9 !important;
+                color: #333 !important;
+            }
+        }
+        
         /* Hero Section */
         .hero {
             background-color: var(--dark-bg);
@@ -534,7 +615,6 @@
             // PDF Download functionality
             document.getElementById('download-pdf').addEventListener('click', function(e) {
                 e.preventDefault();
-                const element = document.body;
                 const filename = 'Leandro_Marcos_Moreira_CV.pdf';
                 
                 // Load the PDF generation library
@@ -543,23 +623,6 @@
                 document.head.appendChild(script);
                 
                 script.onload = function() {
-                    const opt = {
-                        margin: 10,
-                        filename: filename,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                    };
-                    
-                    // Create a clone of the body to modify for PDF
-                    const clonedBody = document.body.cloneNode(true);
-                    const tempDiv = document.createElement('div');
-                    tempDiv.appendChild(clonedBody);
-                    
-                    // Remove form and other elements not needed in PDF
-                    const form = tempDiv.querySelector('.contact-form');
-                    if (form) form.remove();
-                    
                     // Show loading status
                     const loadingDiv = document.createElement('div');
                     loadingDiv.style.position = 'fixed';
@@ -575,12 +638,62 @@
                     loadingDiv.innerHTML = '<div style="background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2);"><h3>Gerando PDF, por favor aguarde...</h3></div>';
                     document.body.appendChild(loadingDiv);
                     
-                    // Generate PDF with delay to show loading
-                    setTimeout(() => {
-                        html2pdf().from(element).set(opt).save().then(() => {
-                            document.body.removeChild(loadingDiv);
-                        });
-                    }, 200);
+                    // Create a clone of the body to modify for PDF
+                    const pdfContainer = document.createElement('div');
+                    pdfContainer.style.width = '100%';
+                    pdfContainer.style.display = 'none';
+                    document.body.appendChild(pdfContainer);
+                    
+                    // Clone important sections for the PDF
+                    const headerClone = document.querySelector('header').cloneNode(true);
+                    const aboutClone = document.querySelector('#sobre').cloneNode(true);
+                    const habilidadesClone = document.querySelector('#habilidades').parentNode.cloneNode(true);
+                    const experienciaClone = document.querySelector('#experiencia').cloneNode(true);
+                    const formacaoClone = document.querySelector('#formacao').cloneNode(true);
+                    const contatoDiv = document.createElement('div');
+                    contatoDiv.innerHTML = '<h2 class="section-title">Contato</h2>';
+                    
+                    // Get contact details without the form
+                    const contactDetails = document.querySelector('.contact-details').cloneNode(true);
+                    
+                    // Remove the loading message that gets caught in the PDF
+                    const loadingMessages = contactDetails.querySelectorAll('div[style*="background-color: #fff; padding: 20px;"]');
+                    loadingMessages.forEach(msg => msg.remove());
+                    
+                    contatoDiv.appendChild(contactDetails);
+                    
+                    // Add all cloned sections to the PDF container
+                    pdfContainer.appendChild(headerClone);
+                    pdfContainer.appendChild(aboutClone);
+                    pdfContainer.appendChild(habilidadesClone);
+                    pdfContainer.appendChild(experienciaClone);
+                    pdfContainer.appendChild(formacaoClone);
+                    pdfContainer.appendChild(contatoDiv);
+                    
+                    // Remove navigation links and loading message from the cloned content
+                    const navToRemove = pdfContainer.querySelector('nav');
+                    if (navToRemove) navToRemove.remove();
+                    
+                    // PDF options
+                    const opt = {
+                        margin: [10, 10],
+                        filename: filename,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true, logging: false },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+                    
+                    // Generate PDF
+                    html2pdf().from(pdfContainer).set(opt).save().then(() => {
+                        // Remove temporary elements
+                        document.body.removeChild(loadingDiv);
+                        document.body.removeChild(pdfContainer);
+                    }).catch(err => {
+                        console.error('PDF generation error:', err);
+                        document.body.removeChild(loadingDiv);
+                        document.body.removeChild(pdfContainer);
+                        alert('Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.');
+                    });
                 };
             });
         });
@@ -847,10 +960,6 @@
                             <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.3 3.3 0 0 0-3.3-3.3c-.8 0-1.8.5-2.2 1.2v-1h-2.6v8.4h2.6v-4.9c0-.8.2-1.5 1.1-1.5 1 0 1.1.7 1.1 1.5v4.9h3.3z"/>
                         </svg>
                         <a href="https://www.linkedin.com/in/leandro-marcos-moreira-94352023" target="_blank">LinkedIn</a>
-                    </p>
-                    <p style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 3px solid #3498db; border-radius: 4px;">
-                        <strong>Nota aos recrutadores:</strong> Disponível somente ambiente remoto!
-Prezado recrutador não questione a cerca de pretensão salarial, você já possui indicadores de mercado e faixa salarial, apenas me apresente os dados se me interessar eu aceito, caso contrário a negativa é na hora! Haja de maneira profissional!
                     </p>
                 </div>
             </div>
