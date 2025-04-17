@@ -1095,7 +1095,7 @@
             <h2 class="section-title">Entre em Contato</h2>
             
             <div class="contact-container">
-                <form class="contact-form">
+                <form class="contact-form" action="https://formspree.io/f/mkgjlobr" method="POST" id="contactForm">
                     <div class="form-group">
                         <label for="name">Nome</label>
                         <input type="text" id="name" name="name" required>
@@ -1118,6 +1118,14 @@
                     
                     <button type="submit" class="btn">Enviar Mensagem</button>
                 </form>
+                
+                <div id="successMessage" style="display: none; margin-top: 20px; padding: 15px; background-color: #d4edda; color: #155724; border-radius: 5px; border-left: 5px solid #28a745;">
+                    <strong>Mensagem enviada com sucesso!</strong> Obrigado pelo contato. Retornarei o mais breve possível.
+                </div>
+                
+                <div id="errorMessage" style="display: none; margin-top: 20px; padding: 15px; background-color: #f8d7da; color: #721c24; border-radius: 5px; border-left: 5px solid #dc3545;">
+                    <strong>Erro ao enviar mensagem!</strong> Por favor, tente novamente ou entre em contato diretamente pelo email: leandromarcosmoreira@gmail.com
+                </div>
                 
                 <div class="contact-details">
                     <h3>Informações de Contato</h3>
